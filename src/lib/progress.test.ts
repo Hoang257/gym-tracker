@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { metric, readyToProgress, suggestionText, summarizeSets, isPersonalRecord } from './progress';
+import { metric, tonnage, readyToProgress, suggestionText, summarizeSets, isPersonalRecord } from './progress';
 import type { ResolvedExercise, Session, SetEntry } from './types';
 
 const ex = (over: Partial<ResolvedExercise> = {}): ResolvedExercise => ({
@@ -29,6 +29,11 @@ describe('metric', () => {
   });
   it('пустые подходы → null', () => {
     expect(metric('kg', [S('', '')])).toBe(null);
+  });
+
+  it('вес с запятой (русская раскладка) считается верно', () => {
+    expect(metric('kg', [S('62,5', '10')])).toBe(62.5);
+    expect(tonnage('kg', [S('62,5', '10')])).toBe(625);
   });
 });
 

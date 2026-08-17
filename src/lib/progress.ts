@@ -1,4 +1,5 @@
 import type { Session, SetEntry, Unit, ResolvedExercise, ExerciseLog } from './types';
+import { num } from './num';
 
 /** Последняя завершенная сессия данного дня программы. */
 export function lastSession(history: Session[], dayId: string): Session | null {
@@ -24,9 +25,9 @@ export function lastSetsFor(session: Session | null, exerciseId: string): SetEnt
 export function metric(unit: Unit, sets: SetEntry[]): number | null {
   const nums = sets
     .map((s) => {
-      if (unit === 'sec') return parseFloat(s.r);
-      if (unit === 'bw') return parseFloat(s.w) > 0 ? parseFloat(s.w) : parseFloat(s.r);
-      return parseFloat(s.w);
+      if (unit === 'sec') return num(s.r);
+      if (unit === 'bw') return num(s.w) > 0 ? num(s.w) : num(s.r);
+      return num(s.w);
     })
     .filter((n) => !Number.isNaN(n));
   if (nums.length === 0) return null;
@@ -43,8 +44,8 @@ export function metricLabel(unit: Unit): string {
 export function tonnage(unit: Unit, sets: SetEntry[]): number {
   if (unit === 'sec') return 0;
   return sets.reduce((sum, s) => {
-    const w = parseFloat(s.w);
-    const r = parseFloat(s.r);
+    const w = num(s.w);
+    const r = num(s.r);
     if (Number.isNaN(r)) return sum;
     return sum + (Number.isNaN(w) ? 0 : w) * r;
   }, 0);
@@ -53,7 +54,7 @@ export function tonnage(unit: Unit, sets: SetEntry[]): number {
 /** Число выполненных (с введенными повторами) подходов. */
 export function workingSets(sets: SetEntry[]): number {
   return sets.filter((s) => {
-    const r = parseFloat(s.r);
+    const r = num(s.r);
     return !Number.isNaN(r) && r > 0;
   }).length;
 }
@@ -68,7 +69,7 @@ interface ProgressTarget {
 /** Готов ли к прибавке: все подходы прошлого раза достигли верха диапазона. */
 export function readyToProgress(t: ProgressTarget, sets: SetEntry[] | null): boolean {
   if (!sets || sets.length < t.sets) return false;
-  const reps = sets.map((s) => parseFloat(s.r)).filter((n) => !Number.isNaN(n));
+  const reps = sets.map((s) => num(s.r)).filter((n) => !Number.isNaN(n));
   if (reps.length < t.sets) return false;
   return reps.every((r) => r >= t.high);
 }
@@ -88,7 +89,7 @@ export function summarizeSets(unit: Unit, sets: SetEntry[] | null): string | nul
     .filter((s) => s.w !== '' || s.r !== '')
     .map((s) => {
       if (unit === 'sec') return `${s.r || '?'}с`;
-      if (unit === 'bw') return s.w && parseFloat(s.w) > 0 ? `+${s.w}×${s.r || '?'}` : `${s.r || '?'}`;
+      if (unit === 'bw') return s.w && num(s.w) > 0 ? `+${s.w}×${s.r || '?'}` : `${s.r || '?'}`;
       return `${s.w || '?'}×${s.r || '?'}`;
     });
   return parts.length ? parts.join(' · ') : null;

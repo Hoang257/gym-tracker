@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Settings } from '../lib/types';
 import { computePlates, summarizePlates } from '../lib/plates';
+import { num } from '../lib/num';
 
 interface Props {
   settings: Settings;
@@ -10,7 +11,7 @@ interface Props {
 
 export function PlateCalculator({ settings, initialWeight = '', onClose }: Props) {
   const [value, setValue] = useState(initialWeight);
-  const target = parseFloat(value);
+  const target = num(value);
   const valid = !Number.isNaN(target) && target > 0;
   const result = valid ? computePlates(target, settings.barWeight, settings.plates) : null;
 

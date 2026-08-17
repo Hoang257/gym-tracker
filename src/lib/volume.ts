@@ -1,5 +1,6 @@
 import type { Session, MuscleGroup, MuscleTag } from './types';
 import { weekStart } from './date';
+import { num } from './num';
 
 // Русские подписи групп мышц для UI.
 export const MUSCLE_LABEL: Record<MuscleGroup, string> = {
@@ -24,7 +25,7 @@ export const VOLUME_TARGET = { low: 10, high: 20 };
 
 /** Рабочий ли это подход: есть введенные повторы > 0. */
 function isWorkingSet(r: string): boolean {
-  const n = parseFloat(r);
+  const n = num(r);
   return !Number.isNaN(n) && n > 0;
 }
 
