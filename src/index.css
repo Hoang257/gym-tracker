@@ -411,6 +411,14 @@ h3 {
 .card.done {
   border-color: color-mix(in srgb, var(--energy) 40%, transparent);
   box-shadow: var(--glow-energy);
+  animation: card-settle var(--dur-3) var(--ease-standard);
+}
+
+@keyframes card-settle {
+  from {
+    opacity: 0.45;
+    transform: translateY(-6px);
+  }
 }
 
 .card-head {

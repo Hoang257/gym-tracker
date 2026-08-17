@@ -155,7 +155,9 @@ export function WorkoutView({ store, date, timer, onOpenCalc }: Props) {
       </div>
 
       <div className="list">
-        {exercises.map((ex) => {
+        {[...exercises]
+          .sort((a, b) => (draft.done[a.exerciseId] ? 1 : 0) - (draft.done[b.exerciseId] ? 1 : 0))
+          .map((ex) => {
           const sets = draft.sets[ex.exerciseId] ?? [];
           const done = !!draft.done[ex.exerciseId];
           const doneSets = draft.doneSets?.[ex.exerciseId] ?? sets.map(() => false);
