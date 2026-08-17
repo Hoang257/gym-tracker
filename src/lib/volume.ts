@@ -68,6 +68,31 @@ export function currentWeekVolume(sessions: Session[], now = new Date()): Muscle
   return weeklyVolume(sessions, weekStart(now));
 }
 
+export interface WeekTotals {
+  tonnage: number; // суммарный тоннаж (кг × повторы) за период
+  sets: number; // рабочих подходов
+}
+
+/** Суммарные тоннаж и подходы за период [from, to). */
+export function weekTotals(sessions: Session[], from: number, to: number): WeekTotals {
+  let t = 0;
+  let s = 0;
+  for (const sess of sessions) {
+    if (sess.ts < from || sess.ts >= to) continue;
+    for (const log of sess.logs) {
+      const working = log.sets.filter((set) => isWorkingSet(set.r));
+      s += working.length;
+      if (log.unit === 'sec') continue;
+      for (const set of working) {
+        const w = num(set.w);
+        const r = num(set.r);
+        if (!Number.isNaN(r)) t += (Number.isNaN(w) ? 0 : w) * r;
+      }
+    }
+  }
+  return { tonnage: Math.round(t), sets: s };
+}
+
 export type VolumeStatus = 'low' | 'ok' | 'high';
 
 export function volumeStatus(sets: number): VolumeStatus {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Store } from '../lib/useStore';
 import type { MuscleGroup, BodyMeasurement } from '../lib/types';
-import { allMuscleVolume, volumeStatus, VOLUME_TARGET, MUSCLE_LABEL } from '../lib/volume';
+import { allMuscleVolume, volumeStatus, VOLUME_TARGET, MUSCLE_LABEL, weekTotals } from '../lib/volume';
 import { weekStart, localDate, formatDate } from '../lib/date';
 
 // Заливка тепловой карты: sequential от «пусто» к энергии по числу эффективных подходов.
@@ -276,10 +276,48 @@ export function OverviewView({ store }: { store: Store }) {
   );
   const maxSets = Math.max(VOLUME_TARGET.high, ...volume.map((v) => v.sets), 1);
 
+  // D15: сравнение с прошлой неделей по тоннажу и подходам.
+  const compare = useMemo(() => {
+    const ws = weekStart().getTime();
+    const week = 7 * 24 * 60 * 60 * 1000;
+    const now = weekTotals(store.history, ws, ws + week);
+    const prev = weekTotals(store.history, ws - week, ws);
+    if (prev.tonnage === 0 && prev.sets === 0 && now.tonnage === 0 && now.sets === 0) return null;
+    const pct = prev.tonnage > 0 ? Math.round(((now.tonnage - prev.tonnage) / prev.tonnage) * 100) : null;
+    return { now, prev, pct, setsDiff: now.sets - prev.sets };
+  }, [store.history]);
+
   return (
     <div className="list">
       <div className="section-label">Тело и цель</div>
       <BodyGoal store={store} />
+
+      {compare && (
+        <>
+          <div className="section-label">Эта неделя против прошлой</div>
+          <div className="week-cmp">
+            <div className="week-cmp-item">
+              <span className="week-cmp-v">
+                {compare.now.tonnage >= 1000 ? (compare.now.tonnage / 1000).toFixed(1) : compare.now.tonnage}
+                <small>{compare.now.tonnage >= 1000 ? 'т' : 'кг'}</small>
+              </span>
+              <span className="week-cmp-k">Тоннаж</span>
+              {compare.pct !== null && compare.pct !== 0 && (
+                <span className={`week-cmp-d ${compare.pct > 0 ? 'up' : 'down'}`}>{compare.pct > 0 ? `+${compare.pct}` : compare.pct}%</span>
+              )}
+            </div>
+            <div className="week-cmp-item">
+              <span className="week-cmp-v">{compare.now.sets}</span>
+              <span className="week-cmp-k">Подходов</span>
+              {compare.setsDiff !== 0 && (
+                <span className={`week-cmp-d ${compare.setsDiff > 0 ? 'up' : 'down'}`}>
+                  {compare.setsDiff > 0 ? `+${compare.setsDiff}` : compare.setsDiff}
+                </span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="section-label">Нагрузка мышц за неделю</div>
       <div className="heat-row">
