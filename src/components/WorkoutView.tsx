@@ -4,6 +4,7 @@ import { scheduleLabel } from '../lib/date';
 import { lastSession, lastSetsFor, metric, tonnage, workingSets } from '../lib/progress';
 import type { Store } from '../lib/useStore';
 import type { RestTimer } from '../lib/useRestTimer';
+import { useWakeLock } from '../lib/useWakeLock';
 import { ExerciseCard } from './ExerciseCard';
 
 interface Props {
@@ -28,6 +29,7 @@ export function WorkoutView({ store, date, timer, onOpenCalc }: Props) {
   const { program } = store;
   const [day, setDay] = useState<string>(() => todayDayId(program) ?? nextDayId(program));
   const [toast, setToast] = useState<string | null>(null);
+  useWakeLock(true); // экран не гаснет, пока открыт день тренировки
 
   // Показываемый день: если выбранного нет в программе (напр. после импорта плана
   // все id сменились) — берем первый. И черновик, и рендер работают с этим id.
