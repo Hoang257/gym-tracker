@@ -44,7 +44,7 @@ export function ExerciseCard({
                 Рекорд
               </span>
             )}
-            {ex.videoUrl && (
+            {ex.videoUrl && /^https?:\/\//i.test(ex.videoUrl) && (
               <a
                 className="video-link"
                 href={ex.videoUrl}

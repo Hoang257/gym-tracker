@@ -1,32 +1,51 @@
-# React + TypeScript + Vite
+# Дневник зала
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Личное PWA для ведения тренировок. Нейросеть составляет план — приложение превращает его в живой дневник и отслеживает прогресс: по рабочим весам, по замерам тела (InBody) и по пути к цели.
 
-Currently, two official plugins are available:
+Работает офлайн, ставится на телефон как иконка, данные хранятся локально в браузере (без бэкенда).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Возможности
 
-## React Compiler
+- **Импорт плана от нейросети.** Готовый промпт-шаблон → нейросеть отдаёт план строгим JSON → вставляешь → приложение собирает дневник по дням (упражнения, подходы, целевые веса). Всё редактируется.
+- **Дневник тренировки.** Упражнения дня, цель, что было в прошлый раз. Ввод весов и повторов, отметка выполненного, авто-подсветка личных рекордов.
+- **Инструменты зала.** Таймер отдыха между подходами (сигнал + вибрация), калькулятор блинов на штангу, ссылка на видео-технику упражнения.
+- **Аналитика.** Недельный объём по группам мышц, тепловая карта нагрузки на силуэте тела, замеры InBody с динамикой, прогресс к цели.
+- **Онбординг** — анимированная инструкция при первом запуске (повторно — кнопка «?» в шапке или внизу «Истории»).
+- **Свайп-навигация** — листание вкладок и шагов инструкции жестами.
+- **Тёмная и светлая темы**, установка на телефон (PWA).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Стек
 
-## Expanding the Oxlint configuration
+- React 19 + TypeScript + Vite
+- vite-plugin-pwa (service worker, манифест, офлайн)
+- zod (валидация импорта плана)
+- Хранение: localStorage (репозиторий-абстракция под будущую синхронизацию)
+- Vitest + Testing Library (юнит-тесты логики)
+- Без внешних UI-библиотек, дизайн-система «графит и электричество» в `src/index.css`
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Команды
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev        # дев-сервер (http://localhost:5173)
+npm run build      # прод-сборка (tsc + vite build) в dist/
+npm run preview    # предпросмотр прод-сборки
+npm run test       # тесты в watch-режиме
+npm run test:run   # тесты разово
+npm run lint       # oxlint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Структура
+
+- `src/data/program.ts` — сид-программа + каталог упражнений (мышцы, видео, отдых).
+- `src/lib/types.ts` — модель данных (программа-как-данные, самоописываемые логи, конверт синхронизации).
+- `src/lib/repo.ts` — репозиторий localStorage (шов под облачную синхронизацию).
+- `src/lib/migrate.ts` — миграция старого формата данных с бэкапом.
+- `src/lib/planImport.ts` — разбор и валидация JSON плана + промпт-шаблон.
+- `src/lib/plates.ts`, `volume.ts`, `progress.ts` — калькулятор блинов, объём по мышцам, прогрессия.
+- `src/components/` — экраны и виджеты (тренировка, обзор, история, таймер, калькулятор, онбординг).
+
+## Что дальше
+
+- Синхронизация между устройствами (Supabase: аккаунты + Postgres + realtime).
+- Распознавание замеров InBody по фото (Claude vision через серверную функцию).
