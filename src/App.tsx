@@ -10,11 +10,13 @@ import { OverviewView } from './components/OverviewView';
 import { RestTimer } from './components/RestTimer';
 import { PlateCalculator } from './components/PlateCalculator';
 import { ImportPlan } from './components/ImportPlan';
+import { Onboarding } from './components/Onboarding';
 
 type Tab = 'workout' | 'overview' | 'history';
 type Theme = 'system' | 'light' | 'dark';
 
 const THEME_KEY = 'gt_theme';
+const ONBOARD_KEY = 'gt_onboarded_v1';
 
 function applyTheme(t: Theme) {
   const root = document.documentElement;
@@ -28,7 +30,13 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme) || 'system');
   const [calc, setCalc] = useState<{ open: boolean; weight: string }>({ open: false, weight: '' });
   const [importOpen, setImportOpen] = useState(false);
+  const [onboard, setOnboard] = useState(() => localStorage.getItem(ONBOARD_KEY) !== '1');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const closeOnboard = () => {
+    setOnboard(false);
+    localStorage.setItem(ONBOARD_KEY, '1');
+  };
   const date = localDate();
   const timer = useRestTimer({ sound: store.settings.sound, vibrate: store.settings.vibrate });
 
@@ -104,6 +112,12 @@ export default function App() {
                 <path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10" />
               </svg>
             </button>
+            <button className="icon-btn" onClick={() => setOnboard(true)} aria-label="Как пользоваться">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.2 1-1.2 1.9M12 17h.01" />
+              </svg>
+            </button>
             <button className="icon-btn" onClick={cycleTheme} aria-label="Сменить тему">
               {themeIcon}
             </button>
@@ -175,6 +189,8 @@ export default function App() {
           onImported={() => setTab('workout')}
         />
       )}
+
+      {onboard && <Onboarding onDone={closeOnboard} />}
     </div>
   );
 }
