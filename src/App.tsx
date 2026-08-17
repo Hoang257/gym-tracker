@@ -77,6 +77,20 @@ export default function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  useEffect(() => {
+    if (!importPreview) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setImportPreview(null);
+    };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [importPreview]);
+
   const needsBackup = store.history.length > 0 && Date.now() - lastBackup > BACKUP_STALE_MS;
 
   const streak = useMemo(() => store.history.filter((s) => daysAgo(s.date) < 7).length, [store.history]);

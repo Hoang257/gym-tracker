@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Store } from '../lib/useStore';
 import { parsePlan, PROMPT_TEMPLATE } from '../lib/planImport';
+import { useModalDismiss } from '../lib/useModal';
 
 interface Props {
   store: Store;
@@ -15,6 +16,7 @@ export function ImportPlan({ store, onClose, onImported }: Props) {
   const [json, setJson] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  useModalDismiss(onClose);
 
   const hasDraft = Object.values(store.drafts).some(
     (d) =>

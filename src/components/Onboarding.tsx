@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useSwipe } from '../lib/useSwipe';
+import { useModalDismiss } from '../lib/useModal';
 
 interface Step {
   accent: string;
@@ -64,6 +65,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
   const step = STEPS[i];
   const last = i === STEPS.length - 1;
+  useModalDismiss(onDone);
 
   const swipeRef = useSwipe<HTMLDivElement>(
     () => setI((x) => Math.min(x + 1, STEPS.length - 1)),
