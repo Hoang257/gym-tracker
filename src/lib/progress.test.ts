@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { metric, tonnage, readyToProgress, suggestionText, summarizeSets, isPersonalRecord } from './progress';
+import { metric, tonnage, readyToProgress, suggestionText, summarizeSets, isPersonalRecord, estimateOneRepMax } from './progress';
 import type { ResolvedExercise, Session, SetEntry } from './types';
 
 const ex = (over: Partial<ResolvedExercise> = {}): ResolvedExercise => ({
@@ -77,6 +77,19 @@ describe('summarizeSets', () => {
   it('пропускает пустые', () => {
     expect(summarizeSets('kg', [S('', ''), S('20', '10')])).toBe('20×10');
     expect(summarizeSets('kg', null)).toBe(null);
+  });
+});
+
+describe('estimateOneRepMax', () => {
+  it('Эпли: 100 кг × 5 → 117', () => {
+    expect(estimateOneRepMax('kg', [S('100', '5')])).toBe(117); // 100 * (1 + 5/30) = 116.67 → 117
+  });
+  it('берёт лучший подход', () => {
+    expect(estimateOneRepMax('kg', [S('80', '10'), S('100', '3')])).toBe(110); // max(106.7, 110)
+  });
+  it('не считает для bw/sec и пустых', () => {
+    expect(estimateOneRepMax('bw', [S('5', '8')])).toBe(null);
+    expect(estimateOneRepMax('kg', [S('', '')])).toBe(null);
   });
 });
 

@@ -95,6 +95,20 @@ export function summarizeSets(unit: Unit, sets: SetEntry[] | null): string | nul
   return parts.length ? parts.join(' · ') : null;
 }
 
+/** Оценка 1ПМ по формуле Эпли (лучший подход): вес × (1 + повторы/30). Только для веса (kg). */
+export function estimateOneRepMax(unit: Unit, sets: SetEntry[]): number | null {
+  if (unit !== 'kg') return null;
+  let best = 0;
+  for (const s of sets) {
+    const w = num(s.w);
+    const r = num(s.r);
+    if (Number.isNaN(w) || Number.isNaN(r) || w <= 0 || r <= 0) continue;
+    const e = w * (1 + r / 30);
+    if (e > best) best = e;
+  }
+  return best > 0 ? Math.round(best) : null;
+}
+
 /** Новый ли это личный рекорд по метрике среди прошлых сессий. */
 export function isPersonalRecord(history: Session[], exerciseId: string, unit: Unit, value: number): boolean {
   const prev = history

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Session, Unit } from '../lib/types';
 import { formatDate, daysAgo } from '../lib/date';
-import { metric, metricLabel, summarizeSets } from '../lib/progress';
+import { metric, metricLabel, summarizeSets, estimateOneRepMax } from '../lib/progress';
 import type { Store } from '../lib/useStore';
 import { Sparkline } from './Sparkline';
 
@@ -17,6 +17,7 @@ interface SeriesRow {
   dayTitle: string;
   accent: string;
   values: number[];
+  orm: number | null; // оценка 1ПМ по последней тренировке (kg)
 }
 
 /**
@@ -32,9 +33,11 @@ function buildSeries(history: Session[]): SeriesRow[] {
       const m = metric(log.unit, log.sets);
       if (m === null) continue;
       const key = `${s.dayId}:${log.exerciseId}`;
+      const orm = estimateOneRepMax(log.unit, log.sets);
       const row = byExercise.get(key);
       if (row) {
         row.values.push(m);
+        row.orm = orm; // последняя тренировка — самая свежая (sorted по возрастанию)
       } else {
         byExercise.set(key, {
           exerciseId: log.exerciseId,
@@ -44,6 +47,7 @@ function buildSeries(history: Session[]): SeriesRow[] {
           dayTitle: s.dayTitle,
           accent: `var(--${s.accent ?? 'accent'})`,
           values: [m],
+          orm,
         });
       }
     }
@@ -105,6 +109,7 @@ export function HistoryView({ store }: Props) {
                       <div className="prog-val">
                         {cur} {metricLabel(row.unit)}
                       </div>
+                      {row.orm !== null && <div className="prog-orm">1ПМ ~{row.orm} кг</div>}
                       <div className={`delta ${diff > 0 ? 'up' : 'flat'}`}>
                         {diff > 0 ? `▲ +${diff}` : diff < 0 ? `▼ ${diff}` : '—'}
                       </div>

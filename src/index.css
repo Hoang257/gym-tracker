@@ -2290,6 +2290,13 @@ h3 {
   transform: scale(0.98);
 }
 
+.prog-orm {
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  margin-top: 1px;
+}
+
 /* B4: расширенная зона нажатия для мелких целей (WCAG 2.5.8, минимум 24px) */
 .onb-dot {
   position: relative;
