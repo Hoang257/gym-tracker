@@ -147,6 +147,13 @@ export default function App() {
               style={{ display: 'none' }}
             />
           </div>
+          <button className="help-cta" onClick={() => setOnboard(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.2 1-1.2 1.9M12 17h.01" />
+            </svg>
+            Как пользоваться приложением
+          </button>
         </>
       )}
 
