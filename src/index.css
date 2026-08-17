@@ -1981,6 +1981,31 @@ button {
   }
 }
 
+/* ---------- напоминание о резервной копии ---------- */
+
+.backup-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--warning-dim, color-mix(in srgb, var(--warning) 35%, transparent));
+  background: color-mix(in srgb, var(--warning) 12%, var(--surface-2));
+  color: var(--text-1);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.backup-note svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--warning);
+}
+
 /* ---------- кнопка вызова инструкции ---------- */
 
 .help-cta {

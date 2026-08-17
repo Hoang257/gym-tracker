@@ -19,6 +19,8 @@ type Theme = 'system' | 'light' | 'dark';
 
 const THEME_KEY = 'gt_theme';
 const ONBOARD_KEY = 'gt_onboarded_v1';
+const BACKUP_TS_KEY = 'gt_last_backup';
+const BACKUP_STALE_MS = 30 * 24 * 60 * 60 * 1000; // 30 дней
 
 function applyTheme(t: Theme) {
   const root = document.documentElement;
@@ -33,6 +35,7 @@ export default function App() {
   const [calc, setCalc] = useState<{ open: boolean; weight: string }>({ open: false, weight: '' });
   const [importOpen, setImportOpen] = useState(false);
   const [onboard, setOnboard] = useState(() => localStorage.getItem(ONBOARD_KEY) !== '1');
+  const [lastBackup, setLastBackup] = useState(() => Number(localStorage.getItem(BACKUP_TS_KEY) || 0));
   const fileRef = useRef<HTMLInputElement>(null);
 
   const closeOnboard = () => {
@@ -54,6 +57,13 @@ export default function App() {
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
+  // Просим браузер не вычищать хранилище (iOS чистит через 7 дней без визитов).
+  useEffect(() => {
+    navigator.storage?.persist?.().catch(() => {});
+  }, []);
+
+  const needsBackup = store.history.length > 0 && Date.now() - lastBackup > BACKUP_STALE_MS;
+
   const streak = useMemo(() => store.history.filter((s) => daysAgo(s.date) < 7).length, [store.history]);
 
   const cycleTheme = () => setTheme((t) => (t === 'system' ? 'light' : t === 'light' ? 'dark' : 'system'));
@@ -67,6 +77,9 @@ export default function App() {
     a.download = `gym-tracker-${date}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    const now = Date.now();
+    localStorage.setItem(BACKUP_TS_KEY, String(now));
+    setLastBackup(now);
   };
 
   const onImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,6 +156,14 @@ export default function App() {
       {tab === 'history' && (
         <>
           <HistoryView store={store} />
+          {needsBackup && (
+            <button className="backup-note" onClick={doExport}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+              </svg>
+              <span>Данные хранятся только на этом устройстве. Нажмите, чтобы сделать резервную копию.</span>
+            </button>
+          )}
           <div className="tools-row">
             <button className="ghost-btn" onClick={doExport}>
               Экспорт данных
