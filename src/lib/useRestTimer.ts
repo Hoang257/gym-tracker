@@ -13,8 +13,10 @@ export interface RestTimer {
 type AudioCtor = typeof AudioContext;
 
 /**
- * Глобальный таймер отдыха. Считает от абсолютной метки endsAt, поэтому переживает
- * сворачивание вкладки (в PWA фоновые таймеры неточны) — при возврате пересчитываем остаток.
+ * Глобальный таймер отдыха. Считает от абсолютной метки endsAt.
+ * Сигнал ПЛАНИРУЕТСЯ заранее по часам AudioContext (osc.start в будущий момент),
+ * а не ждёт тика setInterval — поэтому звучит вовремя даже если вкладка свёрнута.
+ * Пока идёт отдых, держим экран включённым через Wake Lock.
  */
 export function useRestTimer(opts: { sound: boolean; vibrate: boolean }): RestTimer {
   const [endsAt, setEndsAt] = useState<number | null>(null);
@@ -22,60 +24,103 @@ export function useRestTimer(opts: { sound: boolean; vibrate: boolean }): RestTi
   const [label, setLabel] = useState('');
   const [now, setNow] = useState(() => Date.now());
   const firedRef = useRef(false);
+
+  const endsAtRef = useRef<number | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const scheduledRef = useRef<OscillatorNode | null>(null);
+  const wakeRef = useRef<WakeLockSentinel | null>(null);
 
   const optsRef = useRef(opts);
   optsRef.current = opts;
 
-  // Контекст создаем/разблокируем на клике старта (user gesture), иначе звук финиша
-  // через 1-3 минуты браузер оставит в suspended и сигнал не прозвучит.
-  const unlockAudio = useCallback(() => {
-    if (typeof window === 'undefined') return;
+  const ensureAudio = useCallback(() => {
+    if (typeof window === 'undefined') return null;
     const Ctor: AudioCtor | undefined =
       window.AudioContext || (window as unknown as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
-    if (!Ctor) return;
+    if (!Ctor) return null;
     try {
       if (!audioRef.current) audioRef.current = new Ctor();
       if (audioRef.current.state === 'suspended') void audioRef.current.resume();
     } catch {
       audioRef.current = null;
     }
+    return audioRef.current;
   }, []);
 
-  const beep = useCallback(() => {
-    const ctx = audioRef.current;
+  const cancelScheduled = useCallback(() => {
+    if (scheduledRef.current) {
+      try {
+        scheduledRef.current.stop();
+        scheduledRef.current.disconnect();
+      } catch {
+        // уже остановлен
+      }
+      scheduledRef.current = null;
+    }
+  }, []);
+
+  // Запланировать бип на N секунд вперёд по часам AudioContext.
+  const scheduleBeep = useCallback((secondsFromNow: number) => {
+    cancelScheduled();
+    if (!optsRef.current.sound) return;
+    const ctx = ensureAudio();
     if (!ctx || ctx.state !== 'running') return;
+    const t = ctx.currentTime + Math.max(0, secondsFromNow);
     try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
       osc.connect(gain).connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.42);
+      osc.start(t);
+      osc.stop(t + 0.42);
+      scheduledRef.current = osc;
     } catch {
       // аудио недоступно — не критично
     }
+  }, [cancelScheduled, ensureAudio]);
+
+  const requestWake = useCallback(async () => {
+    try {
+      const wl = await navigator.wakeLock?.request('screen');
+      if (wl) wakeRef.current = wl;
+    } catch {
+      // Wake Lock недоступен (не в фокусе / не поддерживается) — не критично
+    }
   }, []);
 
+  const releaseWake = useCallback(() => {
+    try {
+      void wakeRef.current?.release();
+    } catch {
+      // уже освобождён
+    }
+    wakeRef.current = null;
+  }, []);
+
+  // Тик только для отображения остатка.
   useEffect(() => {
     if (endsAt === null) return;
     const tick = () => setNow(Date.now());
     const id = window.setInterval(tick, 250);
-    const onVis = () => tick();
+    const onVis = () => {
+      tick();
+      // система освобождает Wake Lock при уходе со страницы — берём заново при возврате
+      if (document.visibilityState === 'visible' && endsAtRef.current) void requestWake();
+    };
     document.addEventListener('visibilitychange', onVis);
     return () => {
       window.clearInterval(id);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [endsAt]);
+  }, [endsAt, requestWake]);
 
   const remaining = endsAt === null ? 0 : Math.max(0, Math.ceil((endsAt - now) / 1000));
 
-  // Сигнал ровно один раз на финише.
+  // Финиш: вибрация (звук уже запланирован по часам ctx), освобождение экрана, скрытие.
   useEffect(() => {
     if (endsAt === null) {
       firedRef.current = false;
@@ -86,32 +131,47 @@ export function useRestTimer(opts: { sound: boolean; vibrate: boolean }): RestTi
       if (optsRef.current.vibrate && typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate([15, 40, 15]);
       }
-      if (optsRef.current.sound) beep();
-      // короткий показ «0:00», затем скрываем
+      releaseWake();
       const id = window.setTimeout(() => setEndsAt(null), 900);
       return () => window.clearTimeout(id);
     }
-  }, [remaining, endsAt, beep]);
+  }, [remaining, endsAt, releaseWake]);
 
   const start = useCallback(
     (seconds: number, lbl: string) => {
-      if (optsRef.current.sound) unlockAudio();
       firedRef.current = false;
+      const end = Date.now() + seconds * 1000;
+      endsAtRef.current = end;
       setTotal(seconds);
       setLabel(lbl);
       setNow(Date.now());
-      setEndsAt(Date.now() + seconds * 1000);
+      setEndsAt(end);
+      scheduleBeep(seconds);
+      void requestWake();
     },
-    [unlockAudio],
+    [scheduleBeep, requestWake],
   );
 
-  const add = useCallback((seconds: number) => {
-    setEndsAt((e) => (e === null ? null : e + seconds * 1000));
-    setTotal((t) => t + seconds);
-    firedRef.current = false;
-  }, []);
+  const add = useCallback(
+    (seconds: number) => {
+      firedRef.current = false;
+      setEndsAt((e) => {
+        const end = (e === null ? Date.now() : e) + seconds * 1000;
+        endsAtRef.current = end;
+        scheduleBeep((end - Date.now()) / 1000);
+        return end;
+      });
+      setTotal((t) => t + seconds);
+    },
+    [scheduleBeep],
+  );
 
-  const stop = useCallback(() => setEndsAt(null), []);
+  const stop = useCallback(() => {
+    endsAtRef.current = null;
+    cancelScheduled();
+    releaseWake();
+    setEndsAt(null);
+  }, [cancelScheduled, releaseWake]);
 
   return { active: endsAt !== null, remaining, total, label, start, add, stop };
 }
