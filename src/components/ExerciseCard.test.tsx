@@ -19,8 +19,10 @@ const ex = (over: Partial<ResolvedExercise> = {}): ResolvedExercise => ({
 const sets: SetEntry[] = [{ w: '20', r: '10' }];
 
 const noop = {
+  doneSets: [false],
   onCell: () => {},
   onToggle: () => {},
+  onToggleSet: () => {},
   onAddSet: () => {},
   onRemoveSet: () => {},
   onStartRest: () => {},

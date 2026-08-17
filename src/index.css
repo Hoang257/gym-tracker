@@ -552,6 +552,39 @@ h3 {
   border-bottom: 0;
 }
 
+.set-check {
+  width: 34px;
+  height: 34px;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface-3);
+  color: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--dur-1) var(--ease-spring);
+}
+
+.set-check svg {
+  width: 15px;
+  height: 15px;
+}
+
+.set-check.on {
+  background: var(--grad-energy);
+  border-color: transparent;
+  color: var(--energy-ink);
+}
+
+.set-check.on {
+  transform: scale(1.04);
+}
+
+.set-done .field input {
+  opacity: 0.6;
+}
+
 .set-n {
   font-family: var(--font-mono);
   font-size: 12px;

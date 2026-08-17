@@ -156,22 +156,32 @@ export function WorkoutView({ store, date, timer, onOpenCalc }: Props) {
         {exercises.map((ex) => {
           const sets = draft.sets[ex.exerciseId] ?? [];
           const done = !!draft.done[ex.exerciseId];
+          const doneSets = draft.doneSets?.[ex.exerciseId] ?? sets.map(() => false);
           const m = metric(ex.unit, sets);
           const best = prMax.get(ex.exerciseId);
           const isPR = done && m !== null && (best === undefined || m > best);
+          const startRest = () => timer.start(ex.rest ?? store.settings.defaultRest, ex.name);
           return (
             <ExerciseCard
               key={ex.exerciseId}
               ex={ex}
               sets={sets}
               done={done}
+              doneSets={doneSets}
               isPR={isPR}
               lastSets={lastSetsFor(prev, ex.exerciseId)}
               onCell={(idx, field, value) => store.setCell(date, currentDay.id, ex.exerciseId, idx, field, value)}
               onToggle={() => store.toggleDone(date, currentDay.id, ex.exerciseId)}
+              onToggleSet={(idx) => {
+                const willBeDone = !doneSets[idx];
+                store.toggleSetDone(date, currentDay.id, ex.exerciseId, idx);
+                // D1: отметил подход выполненным — отдых пошёл сам
+                if (willBeDone) startRest();
+              }}
               onAddSet={() => store.addSet(date, currentDay.id, ex.exerciseId)}
               onRemoveSet={(idx) => store.removeSet(date, currentDay.id, ex.exerciseId, idx)}
-              onStartRest={() => timer.start(ex.rest ?? store.settings.defaultRest, ex.name)}
+              onStartRest={startRest}
+              onRepeatLast={() => store.repeatLast(date, currentDay.id, ex.exerciseId)}
               onOpenCalc={ex.unit === 'kg' ? () => onOpenCalc(lastEnteredWeight(sets)) : undefined}
             />
           );

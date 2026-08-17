@@ -5,18 +5,21 @@ interface Props {
   ex: ResolvedExercise;
   sets: SetEntry[];
   done: boolean;
+  doneSets: boolean[];
   isPR?: boolean;
   lastSets: SetEntry[] | null;
   onCell: (idx: number, field: keyof SetEntry, value: string) => void;
   onToggle: () => void;
+  onToggleSet: (idx: number) => void;
   onAddSet: () => void;
   onRemoveSet: (idx: number) => void;
   onStartRest: () => void;
+  onRepeatLast?: () => void;
   onOpenCalc?: () => void;
 }
 
 export function ExerciseCard({
-  ex, sets, done, isPR, lastSets, onCell, onToggle, onAddSet, onRemoveSet, onStartRest, onOpenCalc,
+  ex, sets, done, doneSets, isPR, lastSets, onCell, onToggle, onToggleSet, onAddSet, onRemoveSet, onStartRest, onRepeatLast, onOpenCalc,
 }: Props) {
   const target = ex.unit === 'sec' ? `${ex.sets} × ${ex.low}–${ex.high} с` : `${ex.sets} × ${ex.low}–${ex.high}`;
   const last = summarizeSets(ex.unit, lastSets);
@@ -67,7 +70,11 @@ export function ExerciseCard({
 
       <div className="sets">
         {sets.map((s, i) => (
-          <div className="set" key={i} style={isSec ? { gridTemplateColumns: '26px 1fr' } : undefined}>
+          <div
+            className={`set${doneSets[i] ? ' set-done' : ''}`}
+            key={i}
+            style={{ gridTemplateColumns: isSec ? '26px 1fr 40px' : '26px 1fr 1fr 40px' }}
+          >
             <span className="set-n">{i + 1}</span>
             {!isSec && (
               <label className="field">
@@ -91,6 +98,16 @@ export function ExerciseCard({
               />
               <span className="u">{isSec ? 'с' : '×'}</span>
             </label>
+            <button
+              className={`set-check${doneSets[i] ? ' on' : ''}`}
+              onClick={() => onToggleSet(i)}
+              aria-pressed={!!doneSets[i]}
+              aria-label={`Подход ${i + 1} ${doneSets[i] ? 'выполнен, отменить' : 'отметить выполненным'}`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </button>
           </div>
         ))}
       </div>
@@ -103,6 +120,11 @@ export function ExerciseCard({
           {sets.length > 1 && (
             <button className="mini-btn" onClick={() => onRemoveSet(sets.length - 1)}>
               − подход
+            </button>
+          )}
+          {onRepeatLast && lastSets && (
+            <button className="mini-btn" onClick={onRepeatLast} title="Заполнить как в прошлый раз">
+              ↻ прошлое
             </button>
           )}
         </div>

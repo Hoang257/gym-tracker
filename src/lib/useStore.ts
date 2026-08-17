@@ -13,6 +13,7 @@ function buildDraft(exercises: ResolvedExercise[], history: Session[], dayId: st
   const prev = lastSession(history, dayId);
   const done: Record<string, boolean> = {};
   const sets: Record<string, SetEntry[]> = {};
+  const doneSets: Record<string, boolean[]> = {};
   for (const ex of exercises) {
     done[ex.exerciseId] = false;
     const prevSets = lastSetsFor(prev, ex.exerciseId);
@@ -21,8 +22,9 @@ function buildDraft(exercises: ResolvedExercise[], history: Session[], dayId: st
       // подставляем вес прошлого раза, повторы оставляем пустыми
       return { w: src?.w ?? '', r: '' };
     });
+    doneSets[ex.exerciseId] = Array.from({ length: ex.sets }, () => false);
   }
-  return { done, sets };
+  return { done, sets, doneSets };
 }
 
 export function useStore() {
@@ -84,14 +86,55 @@ export function useStore() {
     [mutateDraft],
   );
 
+  // Большая галочка упражнения: отмечает/снимает сразу все подходы.
   const toggleDone = useCallback(
     (date: string, dayId: string, exId: string) => {
-      mutateDraft(date, dayId, (base) => ({
-        ...base,
-        done: { ...base.done, [exId]: !base.done[exId] },
-      }));
+      mutateDraft(date, dayId, (base) => {
+        const nextDone = !base.done[exId];
+        const count = (base.sets[exId] ?? []).length;
+        return {
+          ...base,
+          done: { ...base.done, [exId]: nextDone },
+          doneSets: { ...base.doneSets, [exId]: Array.from({ length: count }, () => nextDone) },
+        };
+      });
     },
     [mutateDraft],
+  );
+
+  // Галочка отдельного подхода: упражнение считается выполненным, когда закрыты все подходы.
+  const toggleSetDone = useCallback(
+    (date: string, dayId: string, exId: string, idx: number) => {
+      mutateDraft(date, dayId, (base) => {
+        const count = (base.sets[exId] ?? []).length;
+        const cur = base.doneSets?.[exId] ?? Array.from({ length: count }, () => false);
+        const next = Array.from({ length: count }, (_, i) => (i === idx ? !cur[i] : !!cur[i]));
+        const allDone = count > 0 && next.every(Boolean);
+        return {
+          ...base,
+          doneSets: { ...base.doneSets, [exId]: next },
+          done: { ...base.done, [exId]: allDone },
+        };
+      });
+    },
+    [mutateDraft],
+  );
+
+  // D4: заполнить все подходы значениями прошлой тренировки.
+  const repeatLast = useCallback(
+    (date: string, dayId: string, exId: string) => {
+      mutateDraft(date, dayId, (base) => {
+        const last = lastSetsFor(lastSession(history, dayId), exId);
+        if (!last || last.length === 0) return base;
+        const cur = base.sets[exId] ?? [];
+        const filled = cur.map((s, i) => {
+          const src = last[i] ?? last[last.length - 1];
+          return src ? { w: src.w, r: src.r } : s;
+        });
+        return { ...base, sets: { ...base.sets, [exId]: filled } };
+      });
+    },
+    [mutateDraft, history],
   );
 
   const addSet = useCallback(
@@ -99,7 +142,13 @@ export function useStore() {
       mutateDraft(date, dayId, (base) => {
         const cur = base.sets[exId] ?? [];
         const last = cur[cur.length - 1];
-        return { ...base, sets: { ...base.sets, [exId]: [...cur, { w: last?.w ?? '', r: '' }] } };
+        const curDone = base.doneSets?.[exId] ?? cur.map(() => false);
+        return {
+          ...base,
+          sets: { ...base.sets, [exId]: [...cur, { w: last?.w ?? '', r: '' }] },
+          doneSets: { ...base.doneSets, [exId]: [...curDone, false] },
+          done: { ...base.done, [exId]: false },
+        };
       });
     },
     [mutateDraft],
@@ -110,7 +159,13 @@ export function useStore() {
       mutateDraft(date, dayId, (base) => {
         const cur = base.sets[exId] ?? [];
         if (cur.length <= 1) return base;
-        return { ...base, sets: { ...base.sets, [exId]: cur.filter((_, i) => i !== idx) } };
+        const curDone = (base.doneSets?.[exId] ?? cur.map(() => false)).filter((_, i) => i !== idx);
+        return {
+          ...base,
+          sets: { ...base.sets, [exId]: cur.filter((_, i) => i !== idx) },
+          doneSets: { ...base.doneSets, [exId]: curDone },
+          done: { ...base.done, [exId]: curDone.length > 0 && curDone.every(Boolean) },
+        };
       });
     },
     [mutateDraft],
@@ -234,6 +289,8 @@ export function useStore() {
     getDraft,
     setCell,
     toggleDone,
+    toggleSetDone,
+    repeatLast,
     addSet,
     removeSet,
     finishWorkout,

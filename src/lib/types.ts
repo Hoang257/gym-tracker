@@ -133,8 +133,9 @@ export interface Session extends SyncMeta {
 
 // ---- Черновики (незавершенная тренировка, автосохранение; локально, не синхронизируется) ----
 export interface Draft {
-  done: Record<string, boolean>; // по exerciseId
+  done: Record<string, boolean>; // упражнение целиком выполнено, по exerciseId
   sets: Record<string, SetEntry[]>; // по exerciseId
+  doneSets?: Record<string, boolean[]>; // выполненные подходы (параллельно sets), по exerciseId
 }
 
 export type Drafts = Record<string, Draft>; // ключ: `${date}_${dayId}`
