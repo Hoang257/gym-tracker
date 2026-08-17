@@ -64,6 +64,7 @@ export function HistoryView({ store }: Props) {
   const { history } = store;
   const [open, setOpen] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditState | null>(null);
+  const [query, setQuery] = useState('');
 
   const startEdit = (s: Session) =>
     setEdit({ id: s.id, logs: s.logs.map((l) => ({ ...l, sets: l.sets.map((x) => ({ ...x })) })) });
@@ -98,6 +99,12 @@ export function HistoryView({ store }: Props) {
   const last30 = history.filter((s) => daysAgo(s.date) <= 30).length;
   const lastAgo = daysAgo(sorted[0].date);
   const series = buildSeries(history);
+
+  // D22: поиск по журналу — сессии, где встречается упражнение по названию.
+  const q = query.trim().toLowerCase();
+  const journal = q
+    ? sorted.filter((s) => s.logs.some((l) => l.name.toLowerCase().includes(q)))
+    : sorted;
 
   return (
     <div className="list">
@@ -150,8 +157,18 @@ export function HistoryView({ store }: Props) {
       )}
 
       <div className="section-label">Журнал</div>
+      <input
+        className="journal-search"
+        type="search"
+        inputMode="search"
+        placeholder="Поиск по упражнению…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        aria-label="Поиск по журналу"
+      />
+      {q && journal.length === 0 && <div className="empty">Ничего не нашлось по запросу «{query.trim()}».</div>}
       <div className="list">
-        {sorted.map((s) => {
+        {journal.map((s) => {
           const expanded = open === s.id;
           const doneCount = s.logs.filter((l) => l.done).length;
           return (

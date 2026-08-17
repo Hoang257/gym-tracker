@@ -893,6 +893,23 @@ h3 {
   border-color: var(--danger);
 }
 
+.journal-search {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  outline: none;
+}
+
+.journal-search:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+
 .log-actions {
   display: flex;
   gap: var(--space-2);
