@@ -13,10 +13,11 @@ import { RestTimer } from './components/RestTimer';
 import { PlateCalculator } from './components/PlateCalculator';
 import { ImportPlan } from './components/ImportPlan';
 import { Onboarding } from './components/Onboarding';
+import { MusicView } from './components/MusicView';
 import { useSwipe } from './lib/useSwipe';
 
-type Tab = 'workout' | 'overview' | 'history';
-const TAB_ORDER: Tab[] = ['workout', 'overview', 'history'];
+type Tab = 'music' | 'workout' | 'overview' | 'history';
+const TAB_ORDER: Tab[] = ['music', 'workout', 'overview', 'history'];
 type Theme = 'system' | 'light' | 'dark';
 
 const THEME_KEY = 'gt_theme';
@@ -186,6 +187,7 @@ export default function App() {
 
       <main className="swipe-area" ref={tabSwipe}>
       <div className="tab-content" key={tab}>
+      {tab === 'music' && <MusicView />}
       {tab === 'workout' && (
         <WorkoutView store={store} date={date} timer={timer} onOpenCalc={(weight = '') => setCalc({ open: true, weight })} />
       )}
@@ -231,6 +233,14 @@ export default function App() {
       <RestTimer timer={timer} />
 
       <nav className="tabbar">
+        <button className={`tabbar-btn${tab === 'music' ? ' active' : ''}`} aria-current={tab === 'music' ? 'page' : undefined} onClick={() => setTab('music')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          Музыка
+        </button>
         <button className={`tabbar-btn${tab === 'workout' ? ' active' : ''}`} aria-current={tab === 'workout' ? 'page' : undefined} onClick={() => setTab('workout')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 7v10M7 5v14M17 5v14M20 7v10M7 12h10" />

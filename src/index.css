@@ -2315,6 +2315,122 @@ h3 {
   min-height: 24px;
 }
 
+/* ---------- музыкальный экран-лаунчер ---------- */
+
+.music-tip {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin: 0;
+}
+
+.music-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.music-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-1);
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-standard);
+}
+
+.music-tile:hover {
+  border-color: var(--border-strong);
+}
+
+.music-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mc, var(--accent));
+  flex: none;
+}
+
+.music-pl-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.music-pl {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.music-pl-open {
+  flex: 1;
+  padding: 12px 14px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-pl-del {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-3);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  flex: none;
+}
+
+.music-add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.music-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  border-radius: var(--r-sm);
+  padding: 11px 12px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  outline: none;
+}
+
+.music-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-tint);
+}
+
+.music-err {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.music-add-btn {
+  width: 100%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
