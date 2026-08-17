@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useSwipe } from '../lib/useSwipe';
 
 interface Step {
   accent: string;
@@ -64,9 +65,14 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const step = STEPS[i];
   const last = i === STEPS.length - 1;
 
+  const swipeRef = useSwipe<HTMLDivElement>(
+    () => setI((x) => Math.min(x + 1, STEPS.length - 1)),
+    () => setI((x) => Math.max(x - 1, 0)),
+  );
+
   return (
     <div className="onb-backdrop" role="dialog" aria-modal="true" aria-label="Как пользоваться приложением">
-      <div className="onb">
+      <div className="onb" ref={swipeRef}>
         <div className="onb-head">
           <span className="onb-brand">Дневник зала</span>
           <button className="onb-skip" onClick={onDone}>Пропустить</button>

@@ -1954,6 +1954,27 @@ button {
   pointer-events: none;
 }
 
+/* ---------- листаемая область вкладок ---------- */
+
+.swipe-area {
+  display: block;
+  touch-action: pan-y;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: tab-in var(--dur-2) var(--ease-standard);
+}
+
+@keyframes tab-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--tab-dir, 12px));
+  }
+}
+
 /* ---------- кнопка вызова инструкции ---------- */
 
 .help-cta {

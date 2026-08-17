@@ -11,8 +11,10 @@ import { RestTimer } from './components/RestTimer';
 import { PlateCalculator } from './components/PlateCalculator';
 import { ImportPlan } from './components/ImportPlan';
 import { Onboarding } from './components/Onboarding';
+import { useSwipe } from './lib/useSwipe';
 
 type Tab = 'workout' | 'overview' | 'history';
+const TAB_ORDER: Tab[] = ['workout', 'overview', 'history'];
 type Theme = 'system' | 'light' | 'dark';
 
 const THEME_KEY = 'gt_theme';
@@ -37,6 +39,13 @@ export default function App() {
     setOnboard(false);
     localStorage.setItem(ONBOARD_KEY, '1');
   };
+
+  const swipeTab = (dir: number) =>
+    setTab((cur) => {
+      const i = TAB_ORDER.indexOf(cur) + dir;
+      return i >= 0 && i < TAB_ORDER.length ? TAB_ORDER[i] : cur;
+    });
+  const tabSwipe = useSwipe<HTMLElement>(() => swipeTab(1), () => swipeTab(-1));
   const date = localDate();
   const timer = useRestTimer({ sound: store.settings.sound, vibrate: store.settings.vibrate });
 
@@ -125,6 +134,8 @@ export default function App() {
         </div>
       </header>
 
+      <main className="swipe-area" ref={tabSwipe}>
+      <div className="tab-content" key={tab}>
       {tab === 'workout' && (
         <WorkoutView store={store} date={date} timer={timer} onOpenCalc={(weight = '') => setCalc({ open: true, weight })} />
       )}
@@ -156,6 +167,8 @@ export default function App() {
           </button>
         </>
       )}
+      </div>
+      </main>
 
       <RestTimer timer={timer} />
 
