@@ -36,7 +36,7 @@
   --surface-glass: rgba(19, 25, 32, 0.72);
   --text-1: #eef2f5;
   --text-2: #9ba6b0;
-  --text-3: #626e79;
+  --text-3: #8a96a3;
   --border: #232c34;
   --border-strong: #33404a;
   --hairline: rgba(255, 255, 255, 0.06);
@@ -71,7 +71,7 @@
     --surface-glass: rgba(255, 255, 255, 0.75);
     --text-1: #131a20;
     --text-2: #55606b;
-    --text-3: #8a96a1;
+    --text-3: #5f6b76;
     --border: #e2e7ec;
     --border-strong: #cbd3da;
     --hairline: rgba(15, 25, 35, 0.06);
@@ -103,7 +103,7 @@
   --surface-glass: rgba(255, 255, 255, 0.75);
   --text-1: #131a20;
   --text-2: #55606b;
-  --text-3: #8a96a1;
+  --text-3: #5f6b76;
   --border: #e2e7ec;
   --border-strong: #cbd3da;
   --hairline: rgba(15, 25, 35, 0.06);
@@ -317,9 +317,9 @@ button {
 }
 
 .day-chip.active {
-  color: var(--dc, var(--accent));
+  color: var(--text-1);
   border-color: var(--dc, var(--accent));
-  background: color-mix(in srgb, var(--dc, var(--accent)) 14%, transparent);
+  background: color-mix(in srgb, var(--dc, var(--accent)) 14%, var(--surface-1));
 }
 
 /* ---------- заголовок тренировки (hero) ---------- */
