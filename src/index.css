@@ -1981,6 +1981,11 @@ button {
   }
 }
 
+.sheet-close.danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
 /* ---------- напоминание о резервной копии ---------- */
 
 .backup-note {

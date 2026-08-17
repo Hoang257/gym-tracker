@@ -16,6 +16,12 @@ export function ImportPlan({ store, onClose, onImported }: Props) {
   const [errors, setErrors] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
 
+  const hasDraft = Object.values(store.drafts).some(
+    (d) =>
+      Object.values(d.done).some(Boolean) ||
+      Object.values(d.sets).some((sets) => sets.some((s) => s.w || s.r)),
+  );
+
   const copyPrompt = async () => {
     try {
       await navigator.clipboard.writeText(PROMPT_TEMPLATE);
@@ -101,7 +107,10 @@ export function ImportPlan({ store, onClose, onImported }: Props) {
                 ← Назад
               </button>
             </div>
-            <p className="import-warn">Импорт заменит текущую программу. История тренировок сохранится.</p>
+            <p className="import-warn">
+              Импорт заменит текущую программу. История тренировок сохранится.
+              {hasDraft && ' У вас есть незавершенная тренировка — она будет сброшена.'}
+            </p>
           </>
         )}
 

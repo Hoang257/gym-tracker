@@ -4,6 +4,8 @@ import { useRestTimer } from './lib/useRestTimer';
 import { localDate, daysAgo } from './lib/date';
 import { exportBundle, parseImport } from './lib/storage';
 import { migrateSessions } from './lib/migrate';
+import { mergeById, countOverlap } from './lib/merge';
+import type { Session } from './lib/types';
 import { WorkoutView } from './components/WorkoutView';
 import { HistoryView } from './components/HistoryView';
 import { OverviewView } from './components/OverviewView';
@@ -36,6 +38,13 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [onboard, setOnboard] = useState(() => localStorage.getItem(ONBOARD_KEY) !== '1');
   const [lastBackup, setLastBackup] = useState(() => Number(localStorage.getItem(BACKUP_TS_KEY) || 0));
+  const [toast, setToast] = useState<string | null>(null);
+  const [importPreview, setImportPreview] = useState<{
+    bundle: ReturnType<typeof parseImport>;
+    sessions: Session[];
+    overlap: number;
+    isV1: boolean;
+  } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const closeOnboard = () => {
@@ -62,6 +71,12 @@ export default function App() {
     navigator.storage?.persist?.().catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const needsBackup = store.history.length > 0 && Date.now() - lastBackup > BACKUP_STALE_MS;
 
   const streak = useMemo(() => store.history.filter((s) => daysAgo(s.date) < 7).length, [store.history]);
@@ -82,6 +97,7 @@ export default function App() {
     setLastBackup(now);
   };
 
+  // Только читаем файл и показываем сводку — ничего не заменяем без подтверждения.
   const onImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -89,25 +105,32 @@ export default function App() {
     reader.onload = () => {
       try {
         const bundle = parseImport(String(reader.result));
-        if (bundle.version === 1) {
-          const sessions = migrateSessions(bundle.sessions as never[], store.repo.userId);
-          store.replaceHistory(sessions);
-          alert(`Импортировано тренировок: ${sessions.length}`);
-          return;
-        }
-        if (bundle.program) store.updateProgram(bundle.program);
-        if (bundle.settings) store.updateSettings(bundle.settings);
-        bundle.body?.forEach((b) => store.repo.putBody(b));
-        bundle.goals?.forEach((g) => store.repo.putGoal(g));
-        const sessions = bundle.sessions ?? [];
-        store.replaceHistory(sessions);
-        alert(`Импортировано тренировок: ${sessions.length}`);
+        const isV1 = bundle.version === 1;
+        const sessions = isV1
+          ? migrateSessions(bundle.sessions as never[], store.repo.userId)
+          : bundle.sessions ?? [];
+        setImportPreview({ bundle, sessions, overlap: countOverlap(store.history, sessions), isV1 });
       } catch {
-        alert('Не удалось прочитать файл резервной копии');
+        setToast('Не удалось прочитать файл резервной копии');
       }
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const applyImport = (mode: 'replace' | 'merge') => {
+    if (!importPreview) return;
+    const { bundle, sessions, isV1 } = importPreview;
+    if (!isV1) {
+      if (bundle.program) store.updateProgram(bundle.program);
+      if (bundle.settings) store.updateSettings(bundle.settings);
+      bundle.body?.forEach((b) => store.repo.putBody(b));
+      bundle.goals?.forEach((g) => store.repo.putGoal(g));
+    }
+    const next = mode === 'merge' ? mergeById(store.history, sessions) : sessions;
+    store.replaceHistory(next);
+    setImportPreview(null);
+    setToast(mode === 'merge' ? `Объединено · в истории ${next.length}` : `Заменено · в истории ${next.length}`);
   };
 
   return (
@@ -232,6 +255,32 @@ export default function App() {
       )}
 
       {onboard && <Onboarding onDone={closeOnboard} />}
+
+      {importPreview && (
+        <div className="sheet-backdrop" onClick={() => setImportPreview(null)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-grip" />
+            <div className="sheet-title">Импорт данных</div>
+            <div className="sheet-sub">
+              В файле {importPreview.sessions.length} тренировок. Сейчас в приложении {store.history.length}.
+              {importPreview.overlap > 0 && ` Совпадают по id: ${importPreview.overlap}.`}
+            </div>
+            <div className="import-actions">
+              <button className="btn-primary" onClick={() => applyImport('merge')}>
+                Объединить (добавить недостающие)
+              </button>
+              <button className="sheet-close danger" onClick={() => applyImport('replace')}>
+                Заменить всё
+              </button>
+              <button className="sheet-close" onClick={() => setImportPreview(null)}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );
 }
