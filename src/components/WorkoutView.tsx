@@ -100,6 +100,7 @@ export function WorkoutView({ store, date, timer, onOpenCalc }: Props) {
           <button
             key={d.id}
             className={`day-chip${d.id === currentDay.id ? ' active' : ''}`}
+            aria-pressed={d.id === currentDay.id}
             style={{ ['--dc' as string]: `var(--${d.accent ?? 'accent'})` }}
             onClick={() => setDay(d.id)}
           >
@@ -115,7 +116,7 @@ export function WorkoutView({ store, date, timer, onOpenCalc }: Props) {
               {isRest ? 'Сегодня отдых · выбрана тренировка' : 'Сегодня'}
               {currentDay.schedule && ` · ${scheduleLabel(currentDay.schedule.weekday, currentDay.schedule.time)}`}
             </span>
-            <span className="wk-title">{currentDay.title}</span>
+            <h1 className="wk-title">{currentDay.title}</h1>
             {currentDay.subtitle && <span className="wk-sub">{currentDay.subtitle}</span>}
           </div>
           <div className="ring-wrap">
@@ -183,7 +184,7 @@ export function WorkoutView({ store, date, timer, onOpenCalc }: Props) {
         </button>
       </div>
 
-      {toast && <div className="toast">{toast}</div>}
+      {toast && <div className="toast" role="status">{toast}</div>}
     </>
   );
 }

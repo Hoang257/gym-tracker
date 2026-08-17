@@ -217,19 +217,19 @@ export default function App() {
       <RestTimer timer={timer} />
 
       <nav className="tabbar">
-        <button className={`tabbar-btn${tab === 'workout' ? ' active' : ''}`} onClick={() => setTab('workout')}>
+        <button className={`tabbar-btn${tab === 'workout' ? ' active' : ''}`} aria-current={tab === 'workout' ? 'page' : undefined} onClick={() => setTab('workout')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 7v10M7 5v14M17 5v14M20 7v10M7 12h10" />
           </svg>
           Тренировка
         </button>
-        <button className={`tabbar-btn${tab === 'overview' ? ' active' : ''}`} onClick={() => setTab('overview')}>
+        <button className={`tabbar-btn${tab === 'overview' ? ' active' : ''}`} aria-current={tab === 'overview' ? 'page' : undefined} onClick={() => setTab('overview')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 19V5M4 19h16M8 19v-6M12 19V9M16 19v-9" />
           </svg>
           Обзор
         </button>
-        <button className={`tabbar-btn${tab === 'history' ? ' active' : ''}`} onClick={() => setTab('history')}>
+        <button className={`tabbar-btn${tab === 'history' ? ' active' : ''}`} aria-current={tab === 'history' ? 'page' : undefined} onClick={() => setTab('history')}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="8.5" />
             <path d="M12 7.5V12l3 2" />

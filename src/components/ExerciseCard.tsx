@@ -29,13 +29,14 @@ export function ExerciseCard({
         <button
           className={`check${done ? ' on' : ''}`}
           onClick={onToggle}
+          aria-pressed={done}
           aria-label={done ? 'Отменить выполнение' : 'Отметить выполненным'}
         >
           ✓
         </button>
         <div className="card-info">
           <div className="ex-row">
-            <span className="ex-name">{ex.name}</span>
+            <h2 className="ex-name">{ex.name}</h2>
             {isPR && (
               <span className="pr-badge">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -72,6 +73,7 @@ export function ExerciseCard({
               <label className="field">
                 <input
                   inputMode="decimal"
+                  aria-label={`${ex.name}, подход ${i + 1}, ${ex.unit === 'bw' ? 'доп. вес, кг' : 'вес, кг'}`}
                   placeholder={ex.unit === 'bw' ? 'свой' : 'кг'}
                   value={s.w}
                   onChange={(e) => onCell(i, 'w', e.target.value)}
@@ -82,6 +84,7 @@ export function ExerciseCard({
             <label className="field">
               <input
                 inputMode="numeric"
+                aria-label={`${ex.name}, подход ${i + 1}, ${isSec ? 'секунды' : 'повторы'}`}
                 placeholder={isSec ? 'сек' : 'повт'}
                 value={s.r}
                 onChange={(e) => onCell(i, 'r', e.target.value)}
