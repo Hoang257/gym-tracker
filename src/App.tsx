@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from './lib/useStore';
 import { useRestTimer } from './lib/useRestTimer';
 import { localDate, daysAgo } from './lib/date';
-import { exportBundle, parseImport } from './lib/storage';
+import { exportBundle, exportCsv, parseImport } from './lib/storage';
 import { migrateSessions } from './lib/migrate';
 import { mergeById, countOverlap } from './lib/merge';
 import type { Session } from './lib/types';
@@ -112,6 +112,16 @@ export default function App() {
     setLastBackup(now);
   };
 
+  const doExportCsv = () => {
+    const blob = new Blob([exportCsv(store.repo.userId)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gym-tracker-${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Только читаем файл и показываем сводку — ничего не заменяем без подтверждения.
   const onImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -206,6 +216,9 @@ export default function App() {
           <div className="tools-row">
             <button className="ghost-btn" onClick={doExport}>
               Экспорт данных
+            </button>
+            <button className="ghost-btn" onClick={doExportCsv}>
+              Экспорт в CSV
             </button>
             <button className="ghost-btn" onClick={() => fileRef.current?.click()}>
               Импорт бэкапа

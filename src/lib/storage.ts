@@ -93,6 +93,26 @@ export function exportBundle(userId: string): string {
   return JSON.stringify(bundle, null, 2);
 }
 
+function csvCell(v: string): string {
+  return /[",\n;]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+}
+
+/** Экспорт истории в CSV (одна строка на подход). BOM — чтобы Excel понял кириллицу. */
+export function exportCsv(userId: string): string {
+  const sessions = read<Session[]>(keys(userId).sessions, [])
+    .filter((s) => !s.deleted)
+    .sort((a, b) => a.ts - b.ts);
+  const rows: string[][] = [['дата', 'день', 'упражнение', 'ед', 'подход', 'вес', 'повторы', 'выполнено']];
+  for (const s of sessions) {
+    for (const log of s.logs) {
+      log.sets.forEach((set, i) => {
+        rows.push([s.date, s.dayTitle, log.name, log.unit, String(i + 1), set.w, set.r, log.done ? 'да' : 'нет']);
+      });
+    }
+  }
+  return '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\n');
+}
+
 // Импорт: принимает и v2-бандл, и старый v1-формат ({ version: 1, history: [...] }).
 export function parseImport(json: string): Partial<ExportBundle> {
   const parsed = JSON.parse(json) as Record<string, unknown>;
