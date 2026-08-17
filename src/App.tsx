@@ -14,7 +14,10 @@ import { PlateCalculator } from './components/PlateCalculator';
 import { ImportPlan } from './components/ImportPlan';
 import { Onboarding } from './components/Onboarding';
 import { MusicView } from './components/MusicView';
+import { AccountSheet } from './components/AccountSheet';
 import { useSwipe } from './lib/useSwipe';
+import { useAuth } from './lib/useAuth';
+import { syncAll } from './lib/sync';
 
 type Tab = 'music' | 'workout' | 'overview' | 'history';
 const TAB_ORDER: Tab[] = ['music', 'workout', 'overview', 'history'];
@@ -40,6 +43,8 @@ export default function App() {
   const [onboard, setOnboard] = useState(() => localStorage.getItem(ONBOARD_KEY) !== '1');
   const [lastBackup, setLastBackup] = useState(() => Number(localStorage.getItem(BACKUP_TS_KEY) || 0));
   const [toast, setToast] = useState<string | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const auth = useAuth();
   const [importPreview, setImportPreview] = useState<{
     bundle: ReturnType<typeof parseImport>;
     sessions: Session[];
@@ -77,6 +82,18 @@ export default function App() {
     const t = setTimeout(() => setToast(null), 2600);
     return () => clearTimeout(t);
   }, [toast]);
+
+  // При входе (или восстановлении сессии) тянем данные из облака и сливаем с локальными.
+  const uid = auth.user?.id ?? null;
+  useEffect(() => {
+    if (!uid) return;
+    syncAll(uid).then((res) => {
+      if (res.ok) {
+        store.reloadAll();
+        setToast('Синхронизировано с облаком');
+      }
+    });
+  }, [uid, store]);
 
   useEffect(() => {
     if (!importPreview) return;
@@ -182,6 +199,18 @@ export default function App() {
                 <path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10" />
               </svg>
             </button>
+            {auth.configured && (
+              <button
+                className={`icon-btn${auth.user ? ' on' : ''}`}
+                onClick={() => setAccountOpen(true)}
+                aria-label={auth.user ? 'Аккаунт и синхронизация' : 'Войти для синхронизации'}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" />
+                </svg>
+              </button>
+            )}
             <button className="icon-btn" onClick={() => setOnboard(true)} aria-label="Как пользоваться">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
@@ -292,6 +321,10 @@ export default function App() {
       )}
 
       {onboard && <Onboarding onDone={closeOnboard} />}
+
+      {accountOpen && (
+        <AccountSheet auth={auth} store={store} onClose={() => setAccountOpen(false)} onToast={setToast} />
+      )}
 
       {importPreview && (
         <div className="sheet-backdrop" onClick={() => setImportPreview(null)}>

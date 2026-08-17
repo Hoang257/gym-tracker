@@ -270,6 +270,11 @@ h3 {
   transform: scale(0.96);
 }
 
+.icon-btn.on {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
 .tabs {
   display: flex;
   gap: var(--space-1);

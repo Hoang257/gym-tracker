@@ -253,6 +253,15 @@ export function useStore() {
     [repo],
   );
 
+  // Перечитать всё из репозитория (после облачной синхронизации, изменившей localStorage).
+  const reloadAll = useCallback(() => {
+    setProgram(repo.getProgram());
+    setCatalog(repo.getCatalog());
+    setHistory(repo.getSessions());
+    setBody(repo.getBody());
+    setGoals(repo.getGoals());
+  }, [repo]);
+
   const updateSettings = useCallback(
     (s: Partial<Settings>) => setSettingsState(repo.putSettings(s)),
     [repo],
@@ -310,6 +319,7 @@ export function useStore() {
     replaceHistory,
     updateProgram,
     updateSettings,
+    reloadAll,
   };
 }
 
