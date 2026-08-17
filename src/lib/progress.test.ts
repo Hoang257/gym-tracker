@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { metric, tonnage, readyToProgress, suggestionText, summarizeSets, isPersonalRecord, estimateOneRepMax } from './progress';
+import { metric, tonnage, readyToProgress, suggestionText, summarizeSets, isPersonalRecord, estimateOneRepMax, isPlateau } from './progress';
 import type { ResolvedExercise, Session, SetEntry } from './types';
 
 const ex = (over: Partial<ResolvedExercise> = {}): ResolvedExercise => ({
@@ -90,6 +90,18 @@ describe('estimateOneRepMax', () => {
   it('не считает для bw/sec и пустых', () => {
     expect(estimateOneRepMax('bw', [S('5', '8')])).toBe(null);
     expect(estimateOneRepMax('kg', [S('', '')])).toBe(null);
+  });
+});
+
+describe('isPlateau', () => {
+  it('нет застоя при росте', () => {
+    expect(isPlateau([20, 22, 24, 26, 28])).toBe(false);
+  });
+  it('застой: последние 3 без нового максимума', () => {
+    expect(isPlateau([20, 25, 24, 25, 24])).toBe(true); // max последних 3 (25) <= max ранних (25)
+  });
+  it('мало данных — не застой', () => {
+    expect(isPlateau([20, 20, 20])).toBe(false);
   });
 });
 

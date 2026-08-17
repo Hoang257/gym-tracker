@@ -95,6 +95,17 @@ export function summarizeSets(unit: Unit, sets: SetEntry[] | null): string | nul
   return parts.length ? parts.join(' · ') : null;
 }
 
+/**
+ * Застой: за последние 3 тренировки нет нового максимума сверх того, что было
+ * раньше (нужно минимум 4 точки). Сигнал сменить диапазон повторов или сделать разгрузку.
+ */
+export function isPlateau(values: number[]): boolean {
+  if (values.length < 4) return false;
+  const recent = Math.max(...values.slice(-3));
+  const earlier = Math.max(...values.slice(0, -3));
+  return recent <= earlier;
+}
+
 /** Оценка 1ПМ по формуле Эпли (лучший подход): вес × (1 + повторы/30). Только для веса (kg). */
 export function estimateOneRepMax(unit: Unit, sets: SetEntry[]): number | null {
   if (unit !== 'kg') return null;

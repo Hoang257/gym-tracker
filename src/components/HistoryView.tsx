@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Session, Unit, ExerciseLog, SetEntry } from '../lib/types';
 import { formatDate, daysAgo } from '../lib/date';
-import { metric, metricLabel, summarizeSets, estimateOneRepMax } from '../lib/progress';
+import { metric, metricLabel, summarizeSets, estimateOneRepMax, isPlateau } from '../lib/progress';
 import type { Store } from '../lib/useStore';
 import { Sparkline } from './Sparkline';
 
@@ -147,6 +147,7 @@ export function HistoryView({ store }: Props) {
                       <div className={`delta ${diff > 0 ? 'up' : 'flat'}`}>
                         {diff > 0 ? `▲ +${diff}` : diff < 0 ? `▼ ${diff}` : '—'}
                       </div>
+                      {isPlateau(row.values) && <div className="prog-stall" title="Нет прогресса 3 тренировки — смени диапазон повторов или сделай разгрузку">застой</div>}
                     </div>
                   </div>
                 </div>
