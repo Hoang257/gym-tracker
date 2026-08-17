@@ -45,6 +45,11 @@ alter table gt_body     enable row level security;
 alter table gt_goals    enable row level security;
 alter table gt_program  enable row level security;
 
+drop policy if exists "own rows" on gt_sessions;
+drop policy if exists "own rows" on gt_body;
+drop policy if exists "own rows" on gt_goals;
+drop policy if exists "own rows" on gt_program;
+
 create policy "own rows" on gt_sessions for all
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own rows" on gt_body for all
