@@ -893,6 +893,93 @@ h3 {
   border-color: var(--danger);
 }
 
+.log-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.log-actions .ghost-btn {
+  flex: none;
+}
+
+.log-edit-ex {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.log-edit-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.log-edit-head .n {
+  font-size: 14px;
+  color: var(--text-1);
+}
+
+.mini-check {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface-3);
+  color: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.mini-check.on {
+  background: var(--grad-energy);
+  border-color: transparent;
+  color: var(--energy-ink);
+}
+
+.log-edit-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log-edit-set {
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.log-edit-set input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  min-width: 0;
+}
+
+.log-edit-set input:focus {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.log-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.log-edit-actions .btn-primary {
+  flex: 1;
+}
+
 .empty {
   text-align: center;
   color: var(--text-3);

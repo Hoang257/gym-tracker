@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   Session, Drafts, Draft, SetEntry, Program, Settings, ResolvedExercise, ExerciseCatalog,
-  BodyMeasurement, Goal,
+  BodyMeasurement, Goal, ExerciseLog,
 } from './types';
 import { resolveDay, findDay } from '../data/program';
 import { getRepo } from './repo';
@@ -229,6 +229,17 @@ export function useStore() {
     [repo],
   );
 
+  // D10: правка логов прошлой тренировки (веса/повторы/отметка выполнения).
+  const editSessionLogs = useCallback(
+    (id: string, logs: ExerciseLog[]) => {
+      const s = repo.getSessions().find((x) => x.id === id);
+      if (!s) return;
+      repo.putSession({ ...s, logs });
+      setHistory(repo.getSessions());
+    },
+    [repo],
+  );
+
   const replaceHistory = useCallback(
     (next: Session[]) => {
       repo.replaceSessions(next);
@@ -295,6 +306,7 @@ export function useStore() {
     removeSet,
     finishWorkout,
     deleteSession,
+    editSessionLogs,
     replaceHistory,
     updateProgram,
     updateSettings,

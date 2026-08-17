@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Session, Unit } from '../lib/types';
+import type { Session, Unit, ExerciseLog, SetEntry } from '../lib/types';
 import { formatDate, daysAgo } from '../lib/date';
 import { metric, metricLabel, summarizeSets, estimateOneRepMax } from '../lib/progress';
 import type { Store } from '../lib/useStore';
@@ -7,6 +7,11 @@ import { Sparkline } from './Sparkline';
 
 interface Props {
   store: Store;
+}
+
+interface EditState {
+  id: string;
+  logs: ExerciseLog[];
 }
 
 interface SeriesRow {
@@ -58,6 +63,28 @@ function buildSeries(history: Session[]): SeriesRow[] {
 export function HistoryView({ store }: Props) {
   const { history } = store;
   const [open, setOpen] = useState<string | null>(null);
+  const [edit, setEdit] = useState<EditState | null>(null);
+
+  const startEdit = (s: Session) =>
+    setEdit({ id: s.id, logs: s.logs.map((l) => ({ ...l, sets: l.sets.map((x) => ({ ...x })) })) });
+
+  const editCell = (li: number, si: number, field: keyof SetEntry, value: string) =>
+    setEdit((e) =>
+      e && {
+        ...e,
+        logs: e.logs.map((l, i) =>
+          i !== li ? l : { ...l, sets: l.sets.map((x, j) => (j !== si ? x : { ...x, [field]: value })) },
+        ),
+      },
+    );
+
+  const toggleLogDone = (li: number) =>
+    setEdit((e) => e && { ...e, logs: e.logs.map((l, i) => (i !== li ? l : { ...l, done: !l.done })) });
+
+  const saveEdit = () => {
+    if (edit) store.editSessionLogs(edit.id, edit.logs);
+    setEdit(null);
+  };
 
   if (history.length === 0) {
     return (
@@ -140,7 +167,60 @@ export function HistoryView({ store }: Props) {
                   {formatDate(s.date)} · {doneCount}/{s.logs.length}
                 </span>
               </div>
-              {expanded && (
+              {expanded && edit?.id === s.id && (
+                <div className="log-body">
+                  {edit.logs.map((log, li) => {
+                    const isSec = log.unit === 'sec';
+                    return (
+                      <div className="log-edit-ex" key={log.exerciseId}>
+                        <div className="log-edit-head">
+                          <button
+                            className={`mini-check${log.done ? ' on' : ''}`}
+                            onClick={() => toggleLogDone(li)}
+                            aria-pressed={log.done}
+                            aria-label={`${log.name} ${log.done ? 'выполнено' : 'не выполнено'}`}
+                          >
+                            ✓
+                          </button>
+                          <span className="n">{log.name}</span>
+                        </div>
+                        <div className="log-edit-sets">
+                          {log.sets.map((set, si) => (
+                            <div className="log-edit-set" key={si}>
+                              <span className="set-n">{si + 1}</span>
+                              {!isSec && (
+                                <input
+                                  inputMode="decimal"
+                                  value={set.w}
+                                  placeholder={log.unit === 'bw' ? '+кг' : 'кг'}
+                                  aria-label={`${log.name}, подход ${si + 1}, вес`}
+                                  onChange={(e) => editCell(li, si, 'w', e.target.value)}
+                                />
+                              )}
+                              <input
+                                inputMode="numeric"
+                                value={set.r}
+                                placeholder={isSec ? 'сек' : 'повт'}
+                                aria-label={`${log.name}, подход ${si + 1}, ${isSec ? 'секунды' : 'повторы'}`}
+                                onChange={(e) => editCell(li, si, 'r', e.target.value)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="log-edit-actions">
+                    <button className="btn-primary" onClick={saveEdit}>
+                      Сохранить
+                    </button>
+                    <button className="ghost-btn" onClick={() => setEdit(null)}>
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              )}
+              {expanded && edit?.id !== s.id && (
                 <div className="log-body">
                   {s.logs.map((log) => {
                     const summary = summarizeSets(log.unit, log.sets);
@@ -154,14 +234,19 @@ export function HistoryView({ store }: Props) {
                       </div>
                     );
                   })}
-                  <button
-                    className="del-btn"
-                    onClick={() => {
-                      if (confirm('Удалить эту тренировку из истории?')) store.deleteSession(s.id);
-                    }}
-                  >
-                    Удалить
-                  </button>
+                  <div className="log-actions">
+                    <button className="ghost-btn" onClick={() => startEdit(s)}>
+                      Изменить
+                    </button>
+                    <button
+                      className="del-btn"
+                      onClick={() => {
+                        if (confirm('Удалить эту тренировку из истории?')) store.deleteSession(s.id);
+                      }}
+                    >
+                      Удалить
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
