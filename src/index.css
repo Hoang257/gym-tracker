@@ -141,6 +141,12 @@ body,
   min-height: 100%;
 }
 
+/* не отдавать горизонтальный свайп системной навигации «назад/вперед» */
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
 body {
   background: var(--bg);
   color: var(--text-1);
@@ -2031,6 +2037,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  touch-action: pan-y;
 }
 
 .onb-head {
